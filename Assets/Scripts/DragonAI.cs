@@ -3,15 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
-[RequireComponent (typeof(Rigidbody2D))]
-public class KnightControl : MonoBehaviour
+[RequireComponent(typeof(Rigidbody2D))]
+public class DragonAI : MonoBehaviour
 {
-
     Animator _animator;
     Rigidbody2D _rb2D;
 
     [SerializeField]
     float speed = 2;
+
+    [SerializeField]
+    Transform target;
+
+    [SerializeField]
+    float distanceToAttack = 2;
 
     // Start is called before the first frame update
     void Start()
@@ -21,30 +26,33 @@ public class KnightControl : MonoBehaviour
     }
 
     bool isAttacking = false;
+    float direction;
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetButton("Fire1") && isAttacking == false)
+        if (target != null)
         {
-            _animator.SetTrigger("Attack");
-            _animator.SetBool("Moving", false);
+            float distance = target.position.x - this.transform.position.x;
+            direction = Mathf.Sign(distance);
 
-            _rb2D.velocity = new Vector2(0, _rb2D.velocity.y);
+            if (Mathf.Abs(distance) < distanceToAttack && isAttacking == false)
+            {
+                _animator.SetTrigger("Attack");
+                _animator.SetBool("Moving", false);
 
-            isAttacking = true;
-        }
+                _rb2D.velocity = new Vector2(0, _rb2D.velocity.y);
 
+                isAttacking = true;
+            }
+            else if (isAttacking == false)
+            {
+                _animator.SetBool("Moving", true);
 
-        float vx = Input.GetAxisRaw("Horizontal");
-
-        if(vx != 0 && isAttacking == false)
-        { 
-            _animator.SetBool("Moving", true);
-
-            _rb2D.velocity = new Vector2(vx * speed, _rb2D.velocity.y);
+                _rb2D.velocity = new Vector2(direction * speed, _rb2D.velocity.y);
+            }
         }
         else
-        { 
+        {
             _animator.SetBool("Moving", false);
 
             _rb2D.velocity = new Vector2(0, _rb2D.velocity.y);
@@ -54,10 +62,10 @@ public class KnightControl : MonoBehaviour
     private void LateUpdate()
     {
         if (transform.localScale.x > 0
-            && _rb2D.velocity.x < 0
+            && direction < 0
             ||
             transform.localScale.x < 0
-            && _rb2D.velocity.x > 0)
+            && direction > 0)
         {
             Vector2 localScale = transform.localScale;
             localScale.x *= -1;
